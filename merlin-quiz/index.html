@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trials of Camelot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+/* Layout: one column, like a page lit by candlelight in a castle hall. A night-stone ground,
+   an illuminated parchment leaf for each question, gold for anything you can press.
+   Deliberately single-theme: the candlelit hall is the look in both light and dark settings. */
+:root {
+  --night: #12141f;
+  --stone: #1c2030;
+  --stone-edge: #2c3247;
+  --parchment: #efe3c4;
+  --parchment-deep: #e2d0a4;
+  --ink: #2a1d12;
+  --ink-soft: #6b5440;
+  --gold: #d6a84a;
+  --gold-bright: #f0c96a;
+  --ember: #a8322b;
+  --moss: #3f6b3a;
+  --text-on-night: #e9e2d0;
+  --muted-on-night: #a39c8a;
+  --display: "Uncial Antiqua", "Papyrus", Georgia, serif;
+  --body: "IM Fell English", "Iowan Old Style", Georgia, serif;
+  --caps: "IM Fell English SC", "IM Fell English", Georgia, serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; color: var(--text-on-night); font-family: var(--body); font-size: 18px; line-height: 1.45;
+  background:
+    radial-gradient(60rem 30rem at 50% -8rem, rgba(214,168,74,.18), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 46px, rgba(255,255,255,.025) 46px 48px),
+    repeating-linear-gradient(90deg, transparent 0 94px, rgba(0,0,0,.18) 94px 96px),
+    var(--night);
+  min-height: 100vh;
+}
+.wrap { max-width: 36rem; margin: 0 auto; padding: 16px; padding-block: 18px 48px; display: flex; flex-direction: column; gap: 18px; }
+
+/* ---------- header ---------- */
+header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; }
+.crest { width: 58px; height: 70px; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(240,201,106,.35)); }
+h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 7vw, 2.4rem); line-height: 1; color: var(--gold-bright); text-wrap: balance; text-shadow: 0 0 18px rgba(240,201,106,.25); }
+.sub { margin: 4px 0 0; font-family: var(--caps); color: var(--muted-on-night); font-size: .95rem; letter-spacing: .04em; }
+.music { background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 999px; padding: 6px 12px; font: 1rem var(--caps); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+.music[aria-pressed="true"] { background: var(--gold); color: var(--night); }
+.music svg { width: 16px; height: 16px; }
+
+.tally { display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: space-between; align-items: center; font-family: var(--caps); color: var(--muted-on-night); font-size: 1rem; font-variant-numeric: tabular-nums; }
+.tally b { color: var(--text-on-night); font-weight: 400; }
+.tally > span:first-child { white-space: nowrap; }
+.candles { display: flex; gap: 5px; padding-top: 8px; }
+.candles i { width: 8px; height: 16px; border-radius: 2px 2px 1px 1px; background: var(--stone-edge); position: relative; }
+.candles i.lit { background: var(--parchment); }
+.candles i.lit::before { content: ""; position: absolute; left: 50%; top: -8px; width: 6px; height: 8px; margin-left: -3px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: var(--gold-bright); box-shadow: 0 0 8px var(--gold-bright); }
+.candles i.out { background: #3a3f52; }
+
+/* ---------- the parchment leaf ---------- */
+.leaf {
+  background:
+    radial-gradient(120% 90% at 50% 40%, var(--parchment) 55%, var(--parchment-deep) 100%);
+  color: var(--ink); border-radius: 6px; padding: 22px 20px 20px; position: relative;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 14px 40px rgba(0,0,0,.55), inset 0 0 40px rgba(120,80,30,.18);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.leaf::before { content: ""; position: absolute; inset: 7px; border: 1px solid rgba(107,84,64,.45); border-radius: 3px; pointer-events: none; }
+.series { font-family: var(--caps); font-size: .95rem; color: var(--ember); letter-spacing: .06em; }
+.question { margin: 0; font-size: 1.3rem; line-height: 1.35; text-wrap: pretty; }
+.question::first-letter { font-family: var(--display); font-size: 2.6em; float: left; line-height: .85; margin: 4px 8px 0 0; color: var(--ember); }
+
+.options { display: flex; flex-direction: column; gap: 9px; position: relative; }
+.opt { width: 100%; text-align: left; background: rgba(255,250,235,.55); color: var(--ink); border: 1px solid rgba(107,84,64,.5); border-radius: 4px; padding: 12px 14px; font: 1.1rem var(--body); cursor: pointer; display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: 8px; align-items: baseline; transition: background .15s, border-color .15s; }
+.opt:hover:not(:disabled) { background: rgba(255,250,235,.9); border-color: var(--ink-soft); }
+.opt .l { font-family: var(--display); color: var(--ink-soft); }
+.opt .mark { font-family: var(--caps); font-size: .9rem; }
+.opt:disabled { cursor: default; }
+.opt.right { background: rgba(63,107,58,.18); border-color: var(--moss); }
+.opt.right .mark { color: var(--moss); }
+.opt.wrong { background: rgba(168,50,43,.14); border-color: var(--ember); }
+.opt.wrong .mark { color: var(--ember); }
+.opt.dim { opacity: .5; }
+
+.lore { margin: 0; font-style: italic; color: var(--ink-soft); border-top: 1px solid rgba(107,84,64,.35); padding-top: 12px; }
+.lore b { font-style: normal; font-family: var(--caps); }
+.lore b.ok { color: var(--moss); } .lore b.no { color: var(--ember); }
+
+.next { background: linear-gradient(var(--gold-bright), var(--gold)); color: var(--night); border: 0; border-radius: 4px; padding: 14px; font: 1.25rem var(--display); cursor: pointer; box-shadow: 0 4px 0 #8a6a28; }
+.next:active { transform: translateY(2px); box-shadow: 0 2px 0 #8a6a28; }
+button:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+
+/* ---------- end ---------- */
+.verdict { text-align: center; align-items: center; }
+.verdict .title { font-family: var(--display); font-size: 2rem; color: var(--ember); line-height: 1.1; text-wrap: balance; }
+.verdict .score { font-family: var(--display); font-size: 3.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.verdict p { margin: 0; max-width: 30ch; }
+.foot { margin: 0; color: var(--muted-on-night); font-size: .9rem; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .opt { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="crest" viewBox="0 0 58 70" aria-hidden="true">
+      <!-- An original crest: a sword set in a stone, under a crescent moon. -->
+      <path d="M4 6 H54 V34 C54 52 40 62 29 68 C18 62 4 52 4 34 Z" fill="#1c2030" stroke="#d6a84a" stroke-width="2.5"/>
+      <path d="M38 13 a7 7 0 1 0 6 10 a5.5 5.5 0 1 1 -6 -10 Z" fill="#efe3c4"/>
+      <rect x="27.5" y="10" width="3" height="32" fill="#e9e2d0"/>
+      <rect x="21" y="40" width="16" height="3" rx="1" fill="#d6a84a"/>
+      <rect x="27" y="43" width="4" height="6" fill="#8a6a28"/>
+      <path d="M14 58 C16 50 22 47 29 47 C36 47 42 50 44 58 Z" fill="#6b6f80"/>
+    </svg>
+    <div>
+      <h1>Trials of Camelot</h1>
+      <p class="sub">A quiz on all five series of Merlin</p>
+    </div>
+    <button class="music" id="music" type="button" aria-pressed="false">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2v8.3A2.5 2.5 0 1 0 7.5 12.5V5h5V2z" fill="currentColor"/></svg>
+      <span id="musicLabel">Music</span>
+    </button>
+  </header>
+
+  <div class="tally"><span>Question <b id="qn">1</b> of <b id="qt">15</b> · Score <b id="score">0</b></span><span class="candles" id="candles" aria-hidden="true"></span></div>
+
+  <section class="leaf" id="card" aria-live="polite">
+    <div class="series" id="series"></div>
+    <p class="question" id="question"></p>
+    <div class="options" id="options"></div>
+    <p class="lore" id="lore" hidden></p>
+  </section>
+  <button class="next" id="next" type="button" hidden>Onward</button>
+
+  <section class="leaf verdict" id="end" hidden>
+    <div class="series">The trials are done</div>
+    <div class="score" id="final"></div>
+    <div class="title" id="rank"></div>
+    <p id="rankLine"></p>
+    <button class="next" id="again" type="button" style="align-self:stretch">Face the trials again</button>
+  </section>
+
+  <p class="foot">An unofficial fan quiz. Music and artwork are original, not from the show.</p>
+</div>
+
+<script>
+// ---------------------------------------------------------------- questions
+// a = correct answer (always listed first here; options are shuffled on screen).
+const QUESTIONS = [
+  { s: 1, q: "When Merlin first arrives in Camelot, who is he sent to live with and learn from?", a: "Gaius, the court physician", w: ["Geoffrey of Monmouth, the librarian", "Sir Leon, a knight of Camelot", "Tom, the blacksmith"], why: "His mother sends him to Gaius, who becomes his mentor and covers for his magic for years." },
+  { s: 1, q: "Who voiced the Great Dragon chained beneath Camelot?", a: "John Hurt", w: ["Ian McKellen", "Michael Gambon", "Richard Wilson"], why: "John Hurt voiced the dragon. Richard Wilson played Gaius." },
+  { s: 1, q: "What is the Great Dragon’s name?", a: "Kilgharrah", w: ["Aithusa", "Balinor", "Cailleach"], why: "Kilgharrah. Aithusa is the white dragon who hatches later, and Balinor is Merlin’s father." },
+  { s: 1, q: "Who saves Merlin from a griffin, then dreams of becoming a knight despite not being of noble birth?", a: "Lancelot", w: ["Gwaine", "Percival", "Elyan"], why: "Lancelot’s first appearance. Merlin forges him a noble lineage so he can join the knights." },
+  { s: 1, q: "What does Merlin drink at a feast, saving Arthur’s life?", a: "A goblet of poisoned wine", w: ["A sleeping draught", "A love potion", "Water from the Lake of Avalon"], why: "The poison was meant for Arthur. Arthur then rides out alone to fetch the cure." },
+  { s: 1, q: "Which sorceress, killed by Merlin at the end of series 1, set the Questing Beast loose?", a: "Nimueh", w: ["Morgause", "Grunhilda", "Freya"], why: "Nimueh, played by Michelle Ryan, is the main villain of series 1." },
+  { s: 1, q: "Merlin’s home village comes under attack. What is it called?", a: "Ealdor", w: ["Ascetir", "Camlann", "Gedref"], why: "Ealdor, where his mother Hunith lives. Merlin conjures a whirlwind to drive off the raiders." },
+  { s: 1, q: "Which young Druid boy, rescued by Merlin and Morgana, is played as a child by Asa Butterfield?", a: "Mordred", w: ["Gilli", "Will", "Edwin"], why: "Mordred, who grows up to be the knight foretold to kill Arthur." },
+  { s: 2, q: "Uther plans to marry the beautiful Lady Catrina. What is she really?", a: "A troll", w: ["A Sidhe", "A shapeshifting dragon", "A ghost"], why: "A troll in disguise, who enchants Uther in the two-part story Beauty and the Beast." },
+  { s: 2, q: "When a Witchfinder comes to Camelot hunting for magic, who takes the blame to protect Merlin?", a: "Gaius", w: ["Gwen", "Morgana", "Arthur"], why: "Gaius confesses and is nearly burned before Merlin turns the tables on the Witchfinder." },
+  { s: 2, q: "Freya, the cursed Druid girl Merlin falls for, becomes which figure after her death?", a: "The Lady of the Lake", w: ["The Fisher King’s daughter", "The Cailleach", "A Disir"], why: "Merlin lays her to rest on a lake, and she returns as its Lady." },
+  { s: 2, q: "Morgause, who claims to have known Arthur’s mother, is the half-sister of which character?", a: "Morgana", w: ["Gwen", "Arthur", "Vivian"], why: "Morgause is Morgana’s half-sister, and draws her towards her side." },
+  { s: 2, q: "To stop the Great Dragon attacking Camelot, Merlin seeks out his father. What is his father?", a: "The last Dragonlord", w: ["A Druid elder", "A knight of Camelot", "A Sidhe"], why: "Balinor, the last Dragonlord. After he dies, Merlin inherits his power over dragons." },
+  { s: 3, q: "Which secret does Uther admit to Gaius after Morgana is badly hurt?", a: "Morgana is his daughter", w: ["Arthur was born by magic", "He once used magic himself", "Gaius is his brother"], why: "Morgana is Uther’s daughter, the result of an affair with Gorlois’s wife." },
+  { s: 3, q: "Who first meets Arthur and Merlin by joining them in a tavern brawl?", a: "Gwaine", w: ["Percival", "Leon", "Elyan"], why: "Gwaine, played by Eoin Macken, who loves a drink and a fight." },
+  { s: 3, q: "What do Morgause and Morgana use to make their army immortal?", a: "The Cup of Life", w: ["The Golden Trident", "The Crystal of Neahtid", "The Horn of Cathbhadh"], why: "The Cup of Life. Merlin empties it to break the spell." },
+  { s: 3, q: "To retake Camelot, Arthur knights several commoners. Which of these was NOT one of them?", a: "Leon", w: ["Percival", "Elyan", "Gwaine"], why: "Leon was already a knight. Lancelot, Gwaine, Elyan and Percival were all knighted then." },
+  { s: 3, q: "At the end of series 3, what does Merlin do with Excalibur?", a: "Drives it into a stone", w: ["Throws it into the lake", "Gives it to Uther", "Melts it down in the forge"], why: "He sets it into a stone so no one else can take it. It returns in series 4." },
+  { s: 4, q: "How does Lancelot die at the start of series 4?", a: "He sacrifices himself to close the veil between worlds", w: ["Morgana kills him in battle", "He is struck by a Dorocha", "He drowns in the Lake of Avalon"], why: "He walks into the veil in Merlin’s place, closing the rift that let the Dorocha through." },
+  { s: 4, q: "Arthur’s uncle secretly works with Morgana. What is his name?", a: "Agravaine", w: ["Gorlois", "Tristan", "Cenred"], why: "Agravaine de Bois, played by Nathaniel Parker." },
+  { s: 4, q: "Merlin disguises himself as an elderly sorcerer. What does he call himself?", a: "Dragoon the Great", w: ["Emrys the Wise", "Taliesin", "Alator"], why: "Dragoon the Great, a grumpy old man who mostly annoys Arthur." },
+  { s: 4, q: "What is the name of the white dragon that hatches in series 4?", a: "Aithusa", w: ["Kilgharrah", "Kemma", "Mab"], why: "Aithusa, which hatches from the last dragon’s egg and later becomes bound up with Morgana." },
+  { s: 4, q: "To destroy Arthur and Gwen’s engagement, Morgana brings back whom as a shade?", a: "Lancelot", w: ["Uther", "Tom", "Elena"], why: "Lancelot’s shade is enchanted to make Gwen betray Arthur, and Arthur banishes her." },
+  { s: 4, q: "How does series 4 end for Gwen?", a: "She marries Arthur and becomes Queen", w: ["She is banished for good", "She is captured by Morgana", "She leaves for Ealdor"], why: "After Camelot is won back, Arthur marries Gwen and she is crowned Queen." },
+  { s: 4, q: "What is Merlin’s Druid name, the one Morgana fears?", a: "Emrys", w: ["Dragoon", "Myrddin", "Taliesin"], why: "Emrys. Morgana spends years trying to find out who Emrys really is." },
+  { s: 5, q: "Mordred returns as an adult and becomes a knight. What wins him Arthur’s trust?", a: "He saves Arthur from Morgana", w: ["He brings back Excalibur", "He heals Gwen", "He beats Arthur in a tournament"], why: "He saves Arthur when Morgana has him captured, and Arthur knights him." },
+  { s: 5, q: "What does Morgana use to enchant Gwen and turn her against Arthur?", a: "Mandrake root", w: ["A Fomorroh", "A goblin", "A love bracelet"], why: "Morgana tortures Gwen with mandrake root in her dark tower until Gwen serves her." },
+  { s: 5, q: "The Disir demand that Arthur accept something to save Mordred. What?", a: "Magic", w: ["Morgana’s return", "Gaius’s banishment", "A dragon’s egg"], why: "Arthur refuses to accept magic, and the Disir declare his fate sealed." },
+  { s: 5, q: "The execution of which Druid girl drives Mordred to join Morgana?", a: "Kara", w: ["Freya", "Finna", "Vivian"], why: "Kara, whom Mordred loved, is executed for treason." },
+  { s: 5, q: "Where is the final battle between Arthur and Morgana’s forces fought?", a: "Camlann", w: ["Ealdor", "Avalon", "Gedref"], why: "Camlann, the battle foretold to bring about Arthur’s death." },
+  { s: 5, q: "Who deals Arthur his fatal wound?", a: "Mordred", w: ["Morgana", "Agravaine", "Morgause"], why: "Mordred, with a blade forged in dragon’s fire, though Arthur kills him too." },
+  { s: 5, q: "How does Merlin kill Morgana?", a: "With Excalibur", w: ["With a spell of fire", "With help from the Great Dragon", "With the Cup of Life"], why: "Excalibur, forged in a dragon’s breath, is one of the few weapons that can kill her." },
+  { s: 5, q: "In the very last scene, where do we see an ancient Merlin?", a: "Walking by the lake in the present day", w: ["In Camelot’s ruins", "At Arthur’s grave", "In the Crystal Cave"], why: "He waits by the lake in the modern world for the Once and Future King to return." },
+  { s: 0, q: "Which French castle stood in for Camelot?", a: "Château de Pierrefonds", w: ["Mont-Saint-Michel", "Château de Chambord", "Carcassonne"], why: "Pierrefonds in northern France. Many other scenes were filmed in Wales and Kent." },
+  { s: 0, q: "How many episodes of Merlin were made in total?", a: "65", w: ["52", "39", "78"], why: "Five series of 13 episodes each, from 2008 to 2012." },
+  { s: 0, q: "Who played Uther Pendragon?", a: "Anthony Head", w: ["Richard Wilson", "Nathaniel Parker", "Charles Dance"], why: "Anthony Head, who appeared in the first four series as Uther, plus a ghostly return in series 5." },
+];
+const ROUNDS = 15;
+const RANKS = [
+  [0.9, "Court Sorcerer", "Gaius has nothing left to teach you. Camelot has never been safer."],
+  [0.7, "Knight of the Round Table", "Brave, loyal, and only occasionally a clotpole."],
+  [0.5, "Squire", "You know your way around the citadel, if not every secret passage."],
+  [0.3, "Stable Hand", "Arthur would have you mucking out his horses by sundown."],
+  [0, "Stocks Regular", "Prepare for rotten fruit. Watch the series again and come back."],
+];
+
+// ---------------------------------------------------------------- game
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+let state;
+
+function newGame() {
+  // Spread the picks across the series: shuffle, then order so every series turns up.
+  const pick = shuffle(QUESTIONS).slice(0, ROUNDS).sort((x, y) => (x.s || 6) - (y.s || 6));
+  state = { rounds: pick.map(q => ({ id: QUESTIONS.indexOf(q), opts: shuffle([q.a, ...q.w]) })), i: 0, score: 0, answer: null, results: [] };
+  $("end").hidden = true; $("card").hidden = false;
+  render();
+}
+
+function render() {
+  const r = state.rounds[state.i], q = QUESTIONS[r.id], done = state.answer !== null;
+  $("qn").textContent = state.i + 1; $("qt").textContent = ROUNDS; $("score").textContent = state.score;
+  $("series").textContent = q.s ? "Series " + ["I", "II", "III", "IV", "V"][q.s - 1] : "Behind the scenes";
+  $("question").textContent = q.q;
+
+  const box = $("options"); box.innerHTML = "";
+  r.opts.forEach((o, k) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt";
+    b.innerHTML = '<span class="l"></span><span class="t"></span><span class="mark"></span>';
+    b.children[0].textContent = "ABCD"[k];
+    b.children[1].textContent = o;
+    if (done) {
+      b.disabled = true;
+      if (o === q.a) { b.classList.add("right"); b.children[2].textContent = "True"; }
+      else if (o === state.answer) { b.classList.add("wrong"); b.children[2].textContent = "False"; }
+      else b.classList.add("dim");
+    } else b.addEventListener("click", () => choose(o));
+    box.appendChild(b);
+  });
+
+  const lore = $("lore"); lore.hidden = !done;
+  if (done) {
+    const ok = state.answer === q.a;
+    lore.innerHTML = '<b class="' + (ok ? "ok" : "no") + '"></b> <span></span>';
+    lore.children[0].textContent = ok ? "Well answered." : "Not so.";
+    lore.children[1].textContent = q.why;
+  }
+  $("next").hidden = !done;
+  $("next").textContent = state.i + 1 >= ROUNDS ? "See your fate" : "Onward";
+  drawCandles();
+}
+
+function drawCandles() {
+  const c = $("candles"); c.innerHTML = "";
+  for (let k = 0; k < ROUNDS; k++) {
+    const i = document.createElement("i");
+    if (k < state.results.length) i.className = state.results[k] ? "lit" : "out";
+    c.appendChild(i);
+  }
+}
+
+function choose(o) {
+  const q = QUESTIONS[state.rounds[state.i].id];
+  state.answer = o;
+  const ok = o === q.a;
+  if (ok) state.score++;
+  state.results.push(ok);
+  Music.chime(ok);
+  render();
+  $("next").focus({ preventScroll: true });
+}
+
+function next() {
+  if (state.i + 1 >= ROUNDS) return finish();
+  state.i++; state.answer = null;
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function finish() {
+  $("card").hidden = true; $("next").hidden = true; $("end").hidden = false;
+  const frac = state.score / ROUNDS;
+  const [, title, line] = RANKS.find(([min]) => frac >= min);
+  $("final").textContent = state.score + " / " + ROUNDS;
+  $("rank").textContent = title;
+  $("rankLine").textContent = line;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+$("next").addEventListener("click", next);
+$("again").addEventListener("click", newGame);
+
+// ---------------------------------------------------------------- music
+// An original tune, written for this quiz: a slow air in D Dorian on a plucked
+// harp-like voice over a low drone, played with the Web Audio API.
+const Music = (() => {
+  let ctx = null, master = null, timer = null, nextTime = 0, step = 0, on = false;
+  const BPM = 84, beat = 60 / BPM;
+  const hz = n => 440 * Math.pow(2, (n - 69) / 12);
+  // [midi note, length in beats]; null = rest. D Dorian: D E F G A B C.
+  const MELODY = [
+    [62,1],[65,1],[69,1.5],[67,.5],[65,1],[64,1],[62,2],
+    [60,1],[62,1],[64,1],[65,1],[67,2],[69,2],
+    [72,1],[71,.5],[69,.5],[67,1],[69,1],[65,1.5],[64,.5],[62,1],[60,1],
+    [62,1],[64,1],[65,1],[64,1],[62,4],
+    [69,1],[72,1],[74,1.5],[72,.5],[71,1],[69,1],[67,2],
+    [65,1],[67,1],[69,1],[71,1],[72,2],[69,2],
+    [74,1],[72,.5],[71,.5],[69,1],[67,1],[65,1],[64,1],[65,1],[67,1],
+    [69,1],[67,1],[64,1],[60,1],[62,4],
+  ];
+  const BASS = [50, 50, 48, 50, 53, 48, 50, 50]; // one per 4-beat bar, two passes
+
+  function ensure() {
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = 0;
+    const verb = ctx.createConvolver(); verb.buffer = hall(); const wet = ctx.createGain(); wet.gain.value = 0.35;
+    master.connect(ctx.destination); master.connect(verb); verb.connect(wet); wet.connect(ctx.destination);
+  }
+  function hall() {
+    const len = ctx.sampleRate * 2.6, b = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+    return b;
+  }
+  function pluck(note, t, dur, vol) {
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    o1.type = "triangle"; o2.type = "sine"; o1.frequency.value = hz(note); o2.frequency.value = hz(note) * 2;
+    f.type = "lowpass"; f.frequency.setValueAtTime(3200, t); f.frequency.exponentialRampToValueAtTime(700, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(dur, 0.6) * 1.6);
+    const g2 = ctx.createGain(); g2.gain.value = 0.25; o2.connect(g2); g2.connect(f);
+    o1.connect(f); f.connect(g); g.connect(master);
+    o1.start(t); o2.start(t); o1.stop(t + dur * 1.8 + 0.6); o2.stop(t + dur * 1.8 + 0.6);
+  }
+  function drone(note, t, dur) {
+    const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    o.type = "sawtooth"; o.frequency.value = hz(note - 12); f.type = "lowpass"; f.frequency.value = 380;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06, t + 0.5); g.gain.setValueAtTime(0.06, t + dur - 0.4); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.05);
+  }
+  // Schedule notes a little ahead of time so playback stays smooth.
+  function schedule() {
+    while (nextTime < ctx.currentTime + 0.4) {
+      const [note, len] = MELODY[step % MELODY.length];
+      const beatsBefore = MELODY.slice(0, step % MELODY.length).reduce((s, m) => s + m[1], 0);
+      if (beatsBefore % 4 === 0) drone(BASS[(beatsBefore / 4) % BASS.length], nextTime, beat * 4);
+      if (note) pluck(note, nextTime, len * beat, 0.16);
+      nextTime += len * beat; step++;
+    }
+  }
+  function start() {
+    ensure(); ctx.resume(); on = true;
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setTargetAtTime(0.8, ctx.currentTime, 0.4);
+    nextTime = ctx.currentTime + 0.1; step = 0;
+    clearInterval(timer); timer = setInterval(schedule, 100); schedule();
+  }
+  function stop() {
+    on = false; clearInterval(timer);
+    if (ctx) master.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+  }
+  function chime(ok) {
+    if (!on || !ctx) return;
+    const t = ctx.currentTime + 0.02;
+    (ok ? [74, 78, 81] : [62, 61]).forEach((n, i) => pluck(n, t + i * 0.09, 0.5, 0.12));
+  }
+  return { start, stop, chime, get on() { return on; } };
+})();
+
+$("music").addEventListener("click", () => {
+  if (Music.on) Music.stop(); else Music.start();
+  $("music").setAttribute("aria-pressed", String(Music.on));
+  $("musicLabel").textContent = Music.on ? "Music on" : "Music";
+});
+
+// ---------------------------------------------------------------- start
+const hot = window.claude && window.claude.hot;
+function start(data) { if (data && data.state) { state = data.state; if (state.i >= ROUNDS) finish(); else render(); } else newGame(); }
+if (hot && hot.snapshot) hot.snapshot(() => ({ state }));
+hot && hot.ready ? hot.ready(start) : start(hot && hot.data ? hot.data : {});
+</script>
+</body>
+</html>
