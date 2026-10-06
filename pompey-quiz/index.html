@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Name That Nineties Blue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column like a matchday team-sheet; a big kit-number panel on top, clue strips, three name buttons. */
+:root {
+  --bg: #eef1f8;
+  --paper: #ffffff;
+  --ink: #0e1a3a;
+  --muted: #56617f;
+  --line: #d3d9ea;
+  --royal: #1238a8;
+  --royal-ink: #ffffff;
+  --trim: #c8202f;
+  --good: #11804a;
+  --good-bg: #e2f4ea;
+  --bad: #b3202c;
+  --bad-bg: #fbe5e7;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --label: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #070d20; --paper: #0f1a38; --ink: #eef1fb; --muted: #9ba7c9; --line: #233259;
+    --royal: #2f5ce0; --royal-ink: #ffffff; --trim: #ff5a66;
+    --good: #45c987; --good-bg: #0f2e22; --bad: #ff7480; --bad-bg: #3a121a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #070d20; --paper: #0f1a38; --ink: #eef1fb; --muted: #9ba7c9; --line: #233259;
+  --royal: #2f5ce0; --royal-ink: #ffffff; --trim: #ff5a66;
+  --good: #45c987; --good-bg: #0f2e22; --bad: #ff7480; --bad-bg: #3a121a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 34rem; margin: 0 auto; padding: 16px; padding-block: 20px 40px; display: flex; flex-direction: column; gap: 16px; }
+
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { margin: 0; font-family: var(--display); font-weight: 900; font-size: clamp(1.9rem, 8vw, 2.5rem); line-height: .95; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+h1 span { color: var(--royal); }
+.meta { font-family: var(--label); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .85rem; color: var(--muted); display: flex; gap: 14px; font-variant-numeric: tabular-nums; }
+.meta b { color: var(--ink); }
+
+/* The shirt panel: royal blue with red/white trim at the collar edge. */
+.shirt { background: var(--royal); color: var(--royal-ink); border-radius: 14px; padding: 18px 20px 20px; position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; }
+.shirt::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: linear-gradient(90deg, var(--trim) 0 33%, #ffffff 33% 66%, var(--trim) 66%); }
+.shirt .q { font-family: var(--label); text-transform: uppercase; letter-spacing: .1em; font-size: .85rem; opacity: .85; }
+.shirt .who { font-family: var(--display); font-weight: 900; font-size: clamp(1.8rem, 9vw, 2.6rem); line-height: 1; text-transform: uppercase; margin-top: 4px; min-width: 0; }
+.shirt .num { font-family: var(--display); font-weight: 900; font-size: clamp(4.5rem, 24vw, 6.5rem); line-height: .8; color: transparent; -webkit-text-stroke: 2px rgba(255,255,255,.85); }
+
+.clues { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.clue { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 2.2rem 1fr; gap: 10px; align-items: start; animation: drop .25s ease-out; }
+.clue .k { font-family: var(--label); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--royal); padding-top: 2px; }
+.clue p { margin: 0; min-width: 0; }
+.clue.locked { background: transparent; border-style: dashed; color: var(--muted); animation: none; }
+@keyframes drop { from { transform: translateY(-4px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+.reveal { align-self: flex-start; background: none; border: 0; padding: 4px 0; font: 600 .95rem var(--body); color: var(--royal); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.reveal:disabled { color: var(--muted); text-decoration: none; cursor: default; }
+
+.choices { display: flex; flex-direction: column; gap: 10px; }
+.choice { width: 100%; text-align: left; background: var(--paper); color: var(--ink); border: 2px solid var(--line); border-radius: 12px; padding: 14px 16px; font: 600 1.15rem var(--body); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; transition: border-color .15s, transform .1s; }
+.choice:hover:not(:disabled) { border-color: var(--royal); }
+.choice:active:not(:disabled) { transform: scale(.99); }
+.choice:disabled { cursor: default; }
+.choice .tag { font: 600 .8rem var(--label); text-transform: uppercase; letter-spacing: .08em; }
+.choice.right { border-color: var(--good); background: var(--good-bg); }
+.choice.right .tag { color: var(--good); }
+.choice.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.choice.wrong .tag { color: var(--bad); }
+.choice.dim { opacity: .55; }
+button:focus-visible { outline: 3px solid var(--trim); outline-offset: 2px; }
+
+.verdict { font-weight: 600; margin: 0; }
+.next { background: var(--royal); color: var(--royal-ink); border: 0; border-radius: 12px; padding: 15px; font: 900 1.3rem var(--display); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
+
+.points { font-family: var(--label); font-size: .9rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 0; }
+
+.final { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.final .big { font-family: var(--display); font-weight: 900; font-size: 4rem; line-height: .9; color: var(--royal); font-variant-numeric: tabular-nums; }
+.final ol { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 4px; }
+.final li span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.howto { font-size: .9rem; color: var(--muted); margin: 0; }
+@media (prefers-reduced-motion: reduce) { .clue { animation: none; } .choice { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Name that <span>90s Blue</span></h1>
+    <div class="meta"><span>Round <b id="round">1</b>/<b id="total">10</b></span><span>Score <b id="score">0</b></span></div>
+  </header>
+
+  <section id="game">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="shirt" aria-live="polite">
+        <div>
+          <div class="q">Portsmouth, the 1990s</div>
+          <div class="who" id="who">Who am I?</div>
+        </div>
+        <div class="num" id="num" aria-hidden="true">?</div>
+      </div>
+      <ol class="clues" id="clues"></ol>
+      <button class="reveal" id="reveal" type="button">Show another clue</button>
+      <p class="points" id="points"></p>
+      <div class="choices" id="choices"></div>
+      <p class="verdict" id="verdict" hidden></p>
+      <button class="next" id="next" type="button" hidden>Next player</button>
+    </div>
+  </section>
+
+  <section id="end" class="final" hidden>
+    <div class="q" style="font-family:var(--label);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Full time</div>
+    <div class="big" id="finalScore">0</div>
+    <p id="finalLine" style="margin:0"></p>
+    <ol id="recap"></ol>
+    <button class="next" id="again" type="button">Play again</button>
+  </section>
+
+  <p class="howto">Guess with one clue for 3 points, two clues for 2, or all three for 1. Each game picks 10 of 15 players at random.</p>
+</div>
+
+<script>
+const PLAYERS = [
+  { name: "Alan Knight", pos: "GK", clues: [
+    "Goalkeeper who was at Fratton Park for the whole decade, and long before it.",
+    "Made 801 appearances for the club, a record for a goalkeeper at a single club.",
+    "Fans call him “The Legend”. The only player to turn out for Pompey in four different decades." ]},
+  { name: "Guy Whittingham", pos: "FW", clues: [
+    "Striker who served in the British Army before turning professional.",
+    "Scored 42 league goals in 1992–93, a club record at the time.",
+    "Nicknamed “Corporal Punishment”. Sold to Aston Villa in 1993, then came back to Fratton Park in 1999." ]},
+  { name: "Darren Anderton", pos: "MF", clues: [
+    "Young winger who broke into the first team in 1990.",
+    "Scored against Liverpool in the 1992 FA Cup semi-final.",
+    "Sold to Tottenham for £1.75m in 1992, where he later picked up the nickname “Sicknote”." ]},
+  { name: "Kit Symons", pos: "DF", clues: [
+    "Centre-back born in Basingstoke, at the club from 1988 to 1995.",
+    "Played international football for Wales, through his Cardiff-born father.",
+    "Moved to Manchester City in 1995 and later managed Fulham." ]},
+  { name: "Andy Awford", pos: "DF", clues: [
+    "Defender who spent 11 years at Fratton Park, from 1989 to 2000.",
+    "Holds the record as the youngest player in FA Cup history, aged 15, for Worcester City.",
+    "Came back years later and became Portsmouth manager in 2014." ]},
+  { name: "Alan McLoughlin", pos: "MF", clues: [
+    "Midfielder who arrived from Southampton in 1992 and stayed until 1999.",
+    "Born in Manchester to Irish parents, he won 42 caps for the Republic of Ireland.",
+    "His equaliser against Northern Ireland in November 1993 sent Ireland to the 1994 World Cup." ]},
+  { name: "Paul Hall", pos: "FW", clues: [
+    "Forward or right winger, signed from Torquay United in 1993.",
+    "Started all three of Jamaica’s games at the 1998 World Cup.",
+    "Left for Coventry City in 1998 after five seasons at Fratton Park." ]},
+  { name: "Fitzroy Simpson", pos: "MF", clues: [
+    "Midfielder signed from Manchester City in 1995.",
+    "Played in all three of Jamaica’s group games at the 1998 World Cup.",
+    "Left in 1999 for Heart of Midlothian in Scotland." ]},
+  { name: "Deon Burton", pos: "FW", clues: [
+    "Striker who came through at Portsmouth, making his debut in 1993–94.",
+    "Named Jamaican Sportsman of the Year for the qualifying goals that took Jamaica to the 1998 World Cup.",
+    "Sold to Derby County for £1m in 1997 by former Pompey boss Jim Smith." ]},
+  { name: "Lee Bradbury", pos: "FW", clues: [
+    "Striker who served four and a half years in the army, including in Northern Ireland.",
+    "Had two spells at Fratton Park: 1995–97 and 1999–2004.",
+    "Moved to Manchester City for a club-record £3m in 1997." ]},
+  { name: "Steve Claridge", pos: "FW", clues: [
+    "Well-travelled striker who joined in 1998.",
+    "Scored the winner for Leicester in the 1996 play-off final.",
+    "Became Portsmouth’s player-manager in 2000, in a career spanning more than 30 clubs." ]},
+  { name: "John Aloisi", pos: "FW", clues: [
+    "Striker who arrived in 1997 from Italian club Cremonese.",
+    "Scored 26 goals in 60 games before moving to Coventry City.",
+    "Australian. His penalty against Uruguay in 2005 sent Australia to the World Cup." ]},
+  { name: "Mark Chamberlain", pos: "MF", clues: [
+    "Pacey winger at the club from 1988 to 1994.",
+    "Won 8 England caps in the early 1980s and scored on his debut against Luxembourg.",
+    "Father of England midfielder Alex Oxlade-Chamberlain." ]},
+  { name: "Mathias Svensson", pos: "FW", clues: [
+    "Striker signed from Swedish club Elfsborg in 1996.",
+    "Scored 10 goals in 45 games before leaving in 1998.",
+    "Swedish. Went on to play for Crystal Palace, Charlton and Norwich." ]},
+  { name: "Gerry Creaney", pos: "FW", clues: [
+    "Scottish striker who joined from Celtic in 1994.",
+    "Scored 30 goals in just over 60 games for the club.",
+    "Left for Manchester City in 1995, in a deal that brought Paul Walsh to Fratton Park." ]},
+];
+const ROUNDS = 10;
+const LABELS = ["One", "Two", "Three"];
+const POINTS = [3, 2, 1];
+
+const $ = id => document.getElementById(id);
+let state;
+
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function makeChoices(answer) {
+  const others = PLAYERS.filter(p => p.name !== answer.name);
+  const same = shuffle(others.filter(p => p.pos === answer.pos));
+  const rest = shuffle(others.filter(p => p.pos !== answer.pos));
+  const decoys = same.concat(rest).slice(0, 2);
+  return shuffle([answer, ...decoys]).map(p => p.name);
+}
+
+function newGame() {
+  const picks = shuffle(PLAYERS).slice(0, ROUNDS);
+  state = { rounds: picks.map(p => ({ name: p.name, choices: makeChoices(p) })), i: 0, shown: 1, score: 0, answered: null, log: [] };
+  $("end").hidden = true; $("game").hidden = false; $("total").textContent = ROUNDS;
+  render();
+}
+
+function current() { const r = state.rounds[state.i]; return { r, p: PLAYERS.find(p => p.name === r.name) }; }
+
+function render() {
+  const { r, p } = current();
+  const done = state.answered !== null;
+  $("round").textContent = state.i + 1;
+  $("score").textContent = state.score;
+  $("who").textContent = done ? p.name : "Who am I?";
+  $("num").textContent = done ? (state.answered === p.name ? "✓" : "✗") : "?";
+
+  const shown = done ? 3 : state.shown;
+  $("clues").innerHTML = "";
+  p.clues.forEach((c, k) => {
+    const li = document.createElement("li");
+    li.className = "clue" + (k < shown ? "" : " locked");
+    li.innerHTML = `<span class="k">${LABELS[k]}</span><p></p>`;
+    li.querySelector("p").textContent = k < shown ? c : "Hidden clue";
+    $("clues").appendChild(li);
+  });
+
+  $("reveal").hidden = done;
+  $("reveal").disabled = state.shown >= 3;
+  $("reveal").textContent = state.shown >= 3 ? "All clues shown" : "Show another clue (−1 point)";
+  $("points").hidden = done;
+  $("points").textContent = `Worth ${POINTS[state.shown - 1]} point${POINTS[state.shown - 1] === 1 ? "" : "s"} right now`;
+
+  $("choices").innerHTML = "";
+  r.choices.forEach(name => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "choice";
+    b.innerHTML = `<span></span><span class="tag"></span>`;
+    b.firstChild.textContent = name;
+    if (done) {
+      b.disabled = true;
+      if (name === p.name) { b.classList.add("right"); b.lastChild.textContent = "Correct"; }
+      else if (name === state.answered) { b.classList.add("wrong"); b.lastChild.textContent = "Your guess"; }
+      else b.classList.add("dim");
+    } else {
+      b.addEventListener("click", () => answer(name));
+    }
+    $("choices").appendChild(b);
+  });
+
+  const v = $("verdict");
+  v.hidden = !done;
+  if (done) {
+    const last = state.log[state.log.length - 1];
+    v.textContent = last.pts ? `Right! +${last.pts} point${last.pts === 1 ? "" : "s"}.` : `Not this time. It was ${p.name}.`;
+    v.style.color = last.pts ? "var(--good)" : "var(--bad)";
+  }
+  $("next").hidden = !done;
+  $("next").textContent = state.i + 1 >= ROUNDS ? "See your score" : "Next player";
+}
+
+function answer(name) {
+  const { p } = current();
+  const pts = name === p.name ? POINTS[state.shown - 1] : 0;
+  state.score += pts;
+  state.answered = name;
+  state.log.push({ name: p.name, pts });
+  render();
+  $("next").focus({ preventScroll: true });
+}
+
+function next() {
+  if (state.i + 1 >= ROUNDS) return finish();
+  state.i++; state.shown = 1; state.answered = null;
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function finish() {
+  $("game").hidden = true; $("end").hidden = false;
+  $("score").textContent = state.score;
+  const max = ROUNDS * 3;
+  $("finalScore").textContent = `${state.score}/${max}`;
+  const pct = state.score / max;
+  $("finalLine").textContent = pct >= .8 ? "Season-ticket holder. You know your Pompey."
+    : pct >= .5 ? "Solid. You were definitely at Fratton Park in the 90s."
+    : pct >= .25 ? "Mid-table. A few names slipped through."
+    : "Relegation form. Have another go.";
+  $("recap").innerHTML = "";
+  state.log.forEach(l => { const li = document.createElement("li"); li.innerHTML = `<b></b> <span></span>`; li.firstChild.textContent = l.name; li.lastChild.textContent = l.pts ? `+${l.pts}` : "missed"; $("recap").appendChild(li); });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+$("reveal").addEventListener("click", () => { if (state.shown < 3) { state.shown++; render(); } });
+$("next").addEventListener("click", next);
+$("again").addEventListener("click", newGame);
+
+const hot = window.claude?.hot;
+function start(data) { if (data && data.state) { state = data.state; if (state.i >= ROUNDS) finish(); else render(); } else newGame(); }
+hot?.snapshot?.(() => ({ state }));
+hot?.ready ? hot.ready(start) : start(hot?.data ?? {});
+</script>
+</body>
+</html>
