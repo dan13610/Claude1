@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tesseract Slicer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a square viewport on the left (top on phones), a control column beside it.
+   Colour idea: each axis gets a hue; w, the fourth dimension, doubles as the page accent. */
+:root {
+  --bg: #f2f3f7;
+  --panel: #ffffff;
+  --ink: #14161f;
+  --muted: #5b6075;
+  --line: #d8dbe6;
+  --stage: #e8eaf2;
+  --accent: #4f6dd8;
+  --cx: #e4572e;
+  --cy: #d99a00;
+  --cz: #17a398;
+  --cw: #4f6dd8;
+  --display: "Syne", "Avenir Next", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d0f17; --panel: #161925; --ink: #eceef6; --muted: #9aa0b8; --line: #2a2f42; --stage: #10131d;
+    --accent: #7d95f0; --cx: #ff7a52; --cy: #f2c037; --cz: #3fd0c3; --cw: #7d95f0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d0f17; --panel: #161925; --ink: #eceef6; --muted: #9aa0b8; --line: #2a2f42; --stage: #10131d;
+  --accent: #7d95f0; --cx: #ff7a52; --cy: #f2c037; --cz: #3fd0c3; --cw: #7d95f0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 16px; padding-block: 24px 40px; display: flex; flex-direction: column; gap: 18px; }
+
+header { display: flex; flex-direction: column; gap: 6px; max-width: 46rem; }
+h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 7vw, 3rem); line-height: 1; letter-spacing: -.01em; }
+h1 i { font-style: normal; color: var(--accent); }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 760px) { .main { grid-template-columns: 1fr; } }
+
+.stage { position: relative; background: var(--stage); border-radius: 16px; aspect-ratio: 1; max-width: 100%; overflow: hidden; touch-action: none; cursor: grab; }
+.stage:active { cursor: grabbing; }
+canvas { display: block; width: 100%; height: 100%; }
+.stage .hint { position: absolute; left: 12px; bottom: 10px; font: 500 .75rem var(--mono); color: var(--muted); pointer-events: none; }
+.stage .tools { position: absolute; right: 10px; bottom: 8px; display: flex; gap: 6px; }
+
+.panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.readout { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.readout .name { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; text-wrap: balance; }
+.readout .detail { margin: 0; color: var(--muted); }
+.counts { display: flex; gap: 18px; font: 500 .9rem var(--mono); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.counts b { font-weight: 500; color: var(--ink); }
+.counts span { color: var(--muted); }
+.eq { font: 400 .85rem var(--mono); color: var(--muted); overflow-wrap: anywhere; padding-top: 4px; border-top: 1px dashed var(--line); margin-top: 4px; }
+
+.group { display: flex; flex-direction: column; gap: 8px; }
+.label { font: 600 .72rem var(--body); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font: 500 .85rem var(--body); cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.icon-btn { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; font: 500 .78rem var(--body); cursor: pointer; }
+
+.slider { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) 3.4rem; align-items: center; gap: 10px; }
+.slider .ax { font: 500 1rem var(--mono); text-align: center; border-radius: 6px; color: #fff; line-height: 1.6; }
+.slider output { font: 400 .85rem var(--mono); text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--accent); min-width: 0; }
+.ax.x { background: var(--cx); } .ax.y { background: var(--cy); } .ax.z { background: var(--cz); } .ax.w { background: var(--cw); }
+.ax.d { background: var(--ink); color: var(--bg); }
+.sweep-row { display: flex; gap: 8px; align-items: center; }
+.sweep { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 9px 14px; font: 600 .9rem var(--body); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.note { font-size: .85rem; color: var(--muted); margin: 0; max-width: 62ch; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Tesseract <i>Slicer</i></h1>
+    <p class="lede">A 4D hypercube cut by a flat 3D hyperplane leaves a 3D solid, the same way a cube cut by a plane leaves a flat polygon. Tilt and slide the hyperplane to see which solids appear.</p>
+  </header>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <canvas id="view" aria-label="Rotating 3D cross-section of a 4D hypercube"></canvas>
+      <div class="hint">Drag to turn</div>
+      <div class="tools"><button class="icon-btn" id="spin" type="button">Pause spin</button></div>
+    </div>
+
+    <div class="panel">
+      <div class="readout" aria-live="polite">
+        <div class="name" id="name">Octahedron</div>
+        <p class="detail" id="detail"></p>
+        <div class="counts"><span><b id="cv">0</b> vertices</span><span><b id="ce">0</b> edges</span><span><b id="cf">0</b> faces</span></div>
+        <div class="eq" id="eq"></div>
+      </div>
+
+      <div class="group">
+        <div class="label">Try a slice</div>
+        <div class="presets" id="presets"></div>
+      </div>
+
+      <div class="group">
+        <div class="label">Hyperplane direction</div>
+        <div class="slider"><span class="ax x">x</span><input type="range" id="nx" min="-1" max="1" step="0.01"><output id="onx"></output></div>
+        <div class="slider"><span class="ax y">y</span><input type="range" id="ny" min="-1" max="1" step="0.01"><output id="ony"></output></div>
+        <div class="slider"><span class="ax z">z</span><input type="range" id="nz" min="-1" max="1" step="0.01"><output id="onz"></output></div>
+        <div class="slider"><span class="ax w">w</span><input type="range" id="nw" min="-1" max="1" step="0.01"><output id="onw"></output></div>
+      </div>
+
+      <div class="group">
+        <div class="label">Slice position</div>
+        <div class="slider"><span class="ax d">d</span><input type="range" id="t" min="-1" max="1" step="0.005"><output id="ot"></output></div>
+        <div class="sweep-row"><button class="sweep" id="sweep" type="button">Sweep through</button><span class="note">Pass the slice from one side of the hypercube to the other.</span></div>
+      </div>
+
+      <div class="group">
+        <div class="label">Face colour = which cube of the hypercube it lies in</div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--cx)"></i>x = ±1</span>
+          <span><i class="sw" style="background:var(--cy)"></i>y = ±1</span>
+          <span><i class="sw" style="background:var(--cz)"></i>z = ±1</span>
+          <span><i class="sw" style="background:var(--cw)"></i>w = ±1</span>
+        </div>
+        <p class="note">The hypercube is every point with x, y, z and w between −1 and 1; w is the fourth coordinate. Its boundary is 8 cubes, and each face of the slice lies in one of them (darker for +1, lighter for −1).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="slice.js"></script>
+<script>
+(function () {
+  const T = window.TesseractSlice;
+  const $ = id => document.getElementById(id);
+  const ids = ["nx", "ny", "nz", "nw"];
+  const PRESETS = [
+    { label: "Cube", n: [0, 0, 0, 1], t: 0 },
+    { label: "Box", n: [1, 1, 0, 0], t: 0 },
+    { label: "Octahedron", n: [1, 1, 1, 1], t: 0 },
+    { label: "Truncated tetrahedron", n: [1, 1, 1, 1], t: 0.25 },
+    { label: "Tetrahedron", n: [1, 1, 1, 1], t: 0.6 },
+    { label: "Hexagonal prism", n: [1, 1, 1, 0], t: 0 },
+    { label: "Triangular prism", n: [1, 1, 1, 0], t: 0.55 },
+    { label: "Random tilt", random: true },
+  ];
+
+  const state = { n: [1, 1, 1, 1], t: 0, yaw: 0.6, pitch: -0.45, spin: !matchMedia("(prefers-reduced-motion: reduce)").matches, sweeping: false };
+  let current = null;
+
+  // ---------- controls ----------
+  const presetBox = $("presets");
+  PRESETS.forEach((p, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = p.label;
+    b.addEventListener("click", () => {
+      stopSweep();
+      if (p.random) {
+        let n;
+        do { n = [0, 0, 0, 0].map(() => Math.round((Math.random() * 2 - 1) * 100) / 100); } while (Math.hypot(...n) < 0.3);
+        state.n = n; state.t = Math.round((Math.random() * 1.2 - 0.6) * 200) / 200;
+      } else { state.n = p.n.slice(); state.t = p.t; }
+      syncInputs(); update();
+    });
+    presetBox.appendChild(b);
+  });
+
+  ids.forEach((id, k) => $(id).addEventListener("input", e => { state.n[k] = +e.target.value; update(); }));
+  $("t").addEventListener("input", e => { stopSweep(); state.t = +e.target.value; update(); });
+
+  function syncInputs() {
+    ids.forEach((id, k) => { $(id).value = state.n[k]; });
+    $("t").value = state.t;
+  }
+
+  $("spin").addEventListener("click", () => { state.spin = !state.spin; $("spin").textContent = state.spin ? "Pause spin" : "Spin"; });
+
+  let sweepFrom = 0;
+  $("sweep").addEventListener("click", () => {
+    if (state.sweeping) return stopSweep();
+    state.sweeping = true; sweepFrom = performance.now();
+    $("sweep").textContent = "Stop";
+  });
+  function stopSweep() { if (!state.sweeping) return; state.sweeping = false; $("sweep").textContent = "Sweep through"; }
+
+  // ---------- geometry ----------
+  function update() {
+    ids.forEach((id, k) => { $("o" + id).textContent = fmt(state.n[k]); });
+    $("ot").textContent = fmt(state.t);
+    const chips = presetBox.children;
+    PRESETS.forEach((p, i) => chips[i].classList.toggle("on", !p.random && p.t === state.t && p.n.every((v, k) => v === state.n[k])));
+
+    if (Math.hypot(...state.n) < 1e-6) {
+      current = null;
+      $("name").textContent = "Pick a direction";
+      $("detail").textContent = "All four direction sliders are at zero, so there is no hyperplane. Move any of them.";
+      $("cv").textContent = $("ce").textContent = $("cf").textContent = "0";
+      $("eq").textContent = "";
+      return;
+    }
+    current = T.slice(state.n, state.t);
+    const info = T.describe(current);
+    $("name").textContent = info.name;
+    $("detail").textContent = info.detail;
+    $("cv").textContent = current.vertices.length;
+    $("ce").textContent = current.edges.length;
+    $("cf").textContent = current.faces.length;
+    const n = current.normal;
+    const terms = n.map((v, i) => ({ v, a: T.AXES[i] })).filter(o => Math.abs(o.v) > 0.0005);
+    let s = "";
+    terms.forEach((o, i) => {
+      const mag = Math.abs(o.v).toFixed(3);
+      s += (i === 0 ? (o.v < 0 ? "−" : "") : (o.v < 0 ? " − " : " + ")) + mag + o.a;
+    });
+    $("eq").textContent = "Hyperplane:  " + s + " = " + current.d.toFixed(3).replace("-", "−");
+  }
+  function fmt(v) { return (v < 0 ? "−" : "") + Math.abs(v).toFixed(2); }
+
+  // ---------- rendering ----------
+  const canvas = $("view"), ctx = canvas.getContext("2d"), stage = $("stage");
+  let W = 0, H = 0, colors = {};
+
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of ["cx", "cy", "cz", "cw", "ink", "muted", "stage", "line"]) colors[k] = cs.getPropertyValue("--" + k).trim();
+  }
+  function resize() {
+    const r = stage.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  new ResizeObserver(resize).observe(stage);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readColors);
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  function hexToRgb(h) {
+    h = h.replace("#", "");
+    if (h.length === 3) h = h.split("").map(c => c + c).join("");
+    const n = parseInt(h, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function shade(hex, light, lighten) {
+    let [r, g, b] = hexToRgb(hex);
+    if (lighten) { r += (255 - r) * 0.45; g += (255 - g) * 0.45; b += (255 - b) * 0.45; }
+    const k = 0.55 + 0.45 * light;
+    return `rgb(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)})`;
+  }
+
+  function rotate(p) {
+    const cy = Math.cos(state.yaw), sy = Math.sin(state.yaw), cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
+    const x1 = cy * p[0] + sy * p[2], z1 = -sy * p[0] + cy * p[2];
+    const y2 = cp * p[1] - sp * z1, z2 = sp * p[1] + cp * z1;
+    return [x1, y2, z2];
+  }
+  const CAM = 7;
+  function project(p) {
+    const s = Math.min(W, H) / 2 * 0.86 / 2;       // the whole slice fits within radius 2
+    const k = CAM / (CAM - p[2]);
+    return [W / 2 + p[0] * s * k, H / 2 - p[1] * s * k];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    if (!current || current.vertices.length === 0) {
+      ctx.fillStyle = colors.muted; ctx.font = "500 14px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center"; ctx.fillText(current ? "The hyperplane misses the hypercube" : "No hyperplane", W / 2, H / 2);
+      return;
+    }
+    const R = current.vertices.map(rotate);
+    const P = R.map(project);
+    const L = norm3([-0.4, 0.6, 0.7]);
+
+    const faces = current.faces.map(f => {
+      const a = R[f.verts[0]], b = R[f.verts[1]], c = R[f.verts[2]];
+      let nrm = norm3(cross(sub(b, a), sub(c, a)));
+      const depth = f.verts.reduce((s, k) => s + R[k][2], 0) / f.verts.length;
+      // Perspective-correct facing test: compare the normal with the direction to the camera.
+      const toCam = sub([0, 0, CAM], a);
+      let front = dot(nrm, toCam) > 0;
+      if (current.dim === 2) { if (!front) nrm = nrm.map(v => -v); front = true; }
+      return { f, nrm, depth, front };
+    });
+
+    // Back edges first, faint and dashed, so you can see the far side.
+    if (current.dim === 3) {
+      ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = colors.muted; ctx.globalAlpha = 0.45; ctx.lineWidth = 1;
+      for (const o of faces) if (!o.front) path(o.f.verts, P), ctx.stroke();
+      ctx.restore();
+    }
+
+    faces.filter(o => o.front).sort((p, q) => p.depth - q.depth).forEach(o => {
+      const light = Math.max(0, dot(o.nrm, L));
+      const hue = colors["c" + T.AXES[o.f.axis]];
+      path(o.f.verts, P);
+      ctx.globalAlpha = 0.88;
+      ctx.fillStyle = shade(hue, light, o.f.sign < 0);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.lineJoin = "round"; ctx.lineWidth = 1.6; ctx.strokeStyle = colors.ink; ctx.stroke();
+    });
+
+    if (current.dim === 1) {
+      ctx.strokeStyle = colors.ink; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(...P[0]); ctx.lineTo(...P[1]); ctx.stroke();
+    }
+    ctx.fillStyle = colors.ink;
+    for (const p of P) { ctx.beginPath(); ctx.arc(p[0], p[1], current.dim <= 1 ? 4 : 2.2, 0, Math.PI * 2); ctx.fill(); }
+  }
+  function path(vs, P) { ctx.beginPath(); vs.forEach((k, i) => i ? ctx.lineTo(...P[k]) : ctx.moveTo(...P[k])); ctx.closePath(); }
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm3 = a => { const l = Math.hypot(...a) || 1; return a.map(v => v / l); };
+
+  // ---------- interaction ----------
+  let drag = null;
+  stage.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener("pointermove", e => {
+    if (!drag) return;
+    state.yaw += (e.clientX - drag.x) * 0.01;
+    state.pitch = Math.max(-1.5, Math.min(1.5, state.pitch + (e.clientY - drag.y) * 0.01));
+    drag = { x: e.clientX, y: e.clientY };
+  });
+  const endDrag = () => { drag = null; };
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", endDrag);
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (state.spin && !drag) state.yaw += dt * 0.5;
+    if (state.sweeping) {
+      const u = ((now - sweepFrom) / 7000) % 1;                // 7 s per pass
+      state.t = Math.round((-1 + 2 * u) * 1000) / 1000;
+      $("t").value = state.t; update();
+    }
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- start ----------
+  function start(data) {
+    if (data && data.state) Object.assign(state, data.state, { sweeping: false });
+    readColors(); resize(); syncInputs(); update();
+    $("spin").textContent = state.spin ? "Pause spin" : "Spin";
+    requestAnimationFrame(frame);
+  }
+  const hot = window.claude && window.claude.hot;
+  if (hot && hot.snapshot) hot.snapshot(() => ({ state: { n: state.n, t: state.t, yaw: state.yaw, pitch: state.pitch, spin: state.spin } }));
+  hot && hot.ready ? hot.ready(start) : start(hot && hot.data ? hot.data : {});
+})();
+</script>
+</body>
+</html>
