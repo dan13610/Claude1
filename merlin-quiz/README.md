@@ -10,6 +10,7 @@ The theme tune and the show's graphics are BBC copyright, so they aren't used he
 
 - **Music** is an original tune written for this quiz: a slow air in D Dorian on a plucked, harp-like voice over a drone, generated live in the browser with the Web Audio API. It starts only when you press **Music**. Right and wrong answers get a short chime while it's on.
 - **Artwork** is original: a candlelit stone background, parchment question cards with illuminated drop capitals, and a sword-in-the-stone crest drawn in SVG.
+- **Animations**: every so often a patrol of knights on horseback gallops past behind the quiz, and a wrong answer brings a dragon swooping in to breathe fire on the question (with a roar, if music is on). Both are drawn in SVG, with the fire as canvas particles. If your device is set to reduce motion, the horses stay away and the dragon just appears briefly.
 
 ## Adding questions
 
