@@ -59,7 +59,7 @@ h1 span { color: var(--royal); }
 .shirt .num { font-family: var(--display); font-weight: 900; font-size: clamp(4.5rem, 24vw, 6.5rem); line-height: .8; color: transparent; -webkit-text-stroke: 2px rgba(255,255,255,.85); }
 
 .clues { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.clue { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 2.2rem 1fr; gap: 10px; align-items: start; animation: drop .25s ease-out; }
+.clue { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 10px; align-items: start; animation: drop .25s ease-out; }
 .clue .k { font-family: var(--label); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--royal); padding-top: 2px; }
 .clue p { margin: 0; min-width: 0; }
 .clue.locked { background: transparent; border-style: dashed; color: var(--muted); animation: none; }
@@ -99,7 +99,7 @@ button:focus-visible { outline: 3px solid var(--trim); outline-offset: 2px; }
 <div class="wrap">
   <header>
     <h1>Name that <span>90s Blue</span></h1>
-    <div class="meta"><span>Round <b id="round">1</b>/<b id="total">10</b></span><span>Score <b id="score">0</b></span></div>
+    <div class="meta"><span>Round <b id="round">1</b>/<b id="total">12</b></span><span>Score <b id="score">0</b></span></div>
   </header>
 
   <section id="game">
@@ -128,73 +128,146 @@ button:focus-visible { outline: 3px solid var(--trim); outline-offset: 2px; }
     <button class="next" id="again" type="button">Play again</button>
   </section>
 
-  <p class="howto">Guess with one clue for 3 points, two clues for 2, or all three for 1. Each game picks 10 of 15 players at random.</p>
+  <p class="howto">The first clue is the hardest. Guess with one clue for 3 points, two for 2, or all three for 1. Each game picks 12 of 31 players, and the wrong answers played in the same position at about the same time.</p>
 </div>
 
 <script>
+// Clues run from obscure to obvious. "years" is the player's time at Pompey, used to pick
+// wrong answers who played in the same position at the same time.
 const PLAYERS = [
-  { name: "Alan Knight", pos: "GK", clues: [
-    "Goalkeeper who was at Fratton Park for the whole decade, and long before it.",
-    "Made 801 appearances for the club, a record for a goalkeeper at a single club.",
-    "Fans call him “The Legend”. The only player to turn out for Pompey in four different decades." ]},
-  { name: "Guy Whittingham", pos: "FW", clues: [
-    "Striker who served in the British Army before turning professional.",
-    "Scored 42 league goals in 1992–93, a club record at the time.",
-    "Nicknamed “Corporal Punishment”. Sold to Aston Villa in 1993, then came back to Fratton Park in 1999." ]},
-  { name: "Darren Anderton", pos: "MF", clues: [
-    "Young winger who broke into the first team in 1990.",
+  // Goalkeepers
+  { name: "Alan Knight", pos: "GK", years: [1978, 2000], clues: [
+    "Born in Balham, south London. The University of Portsmouth gave him an honorary degree in 1996.",
+    "In goal for the 1992 FA Cup semi-final against Liverpool, lost on penalties after 240 minutes of football.",
+    "Made 801 appearances for the club. Fans call him “The Legend”." ]},
+  { name: "Aaron Flahavan", pos: "GK", years: [1994, 2001], clues: [
+    "Born in Southampton in 1975.",
+    "Spent years as understudy before becoming first-choice goalkeeper around 2000.",
+    "His younger brother Darryl, also a goalkeeper, later played for Pompey too." ]},
+  { name: "Andy Petterson", pos: "GK", years: [1998, 2002], clues: [
+    "The first Western Australian-born player to appear in the Premier League, for Ipswich.",
+    "Charlton’s player of the season in 1996–97.",
+    "Goalkeeper who arrived on loan in late 1998, then signed permanently in 1999." ]},
+
+  // Defenders
+  { name: "Kit Symons", pos: "DF", years: [1988, 1995], clues: [
+    "Born in Basingstoke in 1971.",
+    "Later managed Fulham, and coached Wales alongside Chris Coleman.",
+    "Centre-back capped by Wales while at Fratton Park, who joined Manchester City in 1995." ]},
+  { name: "Andy Awford", pos: "DF", years: [1989, 2000], clues: [
+    "Made around 300 appearances in 11 years at Fratton Park.",
+    "Before turning pro, became the youngest player in FA Cup history, aged 15, for Worcester City.",
+    "Defender who came back to manage Portsmouth in 2014–15." ]},
+  { name: "Jon Gittens", pos: "DF", years: [1993, 1996], clues: [
+    "Born in Moseley, Birmingham. Played for Southampton, Swindon and Middlesbrough before arriving in 1993.",
+    "One of two Pompey players sent off in the 1995 FA Cup fourth-round defeat to Leicester at Fratton Park.",
+    "Centre-back whose last Pompey game was a 3–0 FA Cup defeat to his old club Southampton in 1996." ]},
+  { name: "Robbie Pethick", pos: "DF", years: [1993, 1999], clues: [
+    "Born in Tavistock, Devon.",
+    "Signed from Weymouth in 1993. Made 189 appearances but scored only 3 goals.",
+    "Defender who left for Bristol Rovers in 1999, and later played for Brighton." ]},
+  { name: "Russell Perrett", pos: "DF", years: [1995, 1999], clues: [
+    "Holds the record as the youngest player in the Wessex League, aged 14.",
+    "Signed from non-league AFC Lymington in 1995.",
+    "Defender who joined Cardiff in 1999, then won a league title and two promotions with Luton." ]},
+  { name: "Adrian Whitbread", pos: "DF", years: [1995, 2001], clues: [
+    "Born in Epping. Started out at Leyton Orient.",
+    "Signed from West Ham for £250,000 in 1996, after a loan spell the year before.",
+    "Defender who later became assistant manager at Brentford, MK Dons and Leicester." ]},
+  { name: "Bjørn Kristensen", pos: "DF", years: [1993, 1995], clues: [
+    "Won 20 caps for his country, scoring twice.",
+    "Joined from Newcastle United in 1993.",
+    "Danish defender and midfielder who went home to AaB in 1995." ]},
+
+  // Midfielders
+  { name: "Darren Anderton", pos: "MF", years: [1990, 1992], clues: [
+    "Made his debut in the League Cup against Cardiff City in October 1990.",
     "Scored against Liverpool in the 1992 FA Cup semi-final.",
-    "Sold to Tottenham for £1.75m in 1992, where he later picked up the nickname “Sicknote”." ]},
-  { name: "Kit Symons", pos: "DF", clues: [
-    "Centre-back born in Basingstoke, at the club from 1988 to 1995.",
-    "Played international football for Wales, through his Cardiff-born father.",
-    "Moved to Manchester City in 1995 and later managed Fulham." ]},
-  { name: "Andy Awford", pos: "DF", clues: [
-    "Defender who spent 11 years at Fratton Park, from 1989 to 2000.",
-    "Holds the record as the youngest player in FA Cup history, aged 15, for Worcester City.",
-    "Came back years later and became Portsmouth manager in 2014." ]},
-  { name: "Alan McLoughlin", pos: "MF", clues: [
-    "Midfielder who arrived from Southampton in 1992 and stayed until 1999.",
-    "Born in Manchester to Irish parents, he won 42 caps for the Republic of Ireland.",
-    "His equaliser against Northern Ireland in November 1993 sent Ireland to the 1994 World Cup." ]},
-  { name: "Paul Hall", pos: "FW", clues: [
-    "Forward or right winger, signed from Torquay United in 1993.",
-    "Started all three of Jamaica’s games at the 1998 World Cup.",
-    "Left for Coventry City in 1998 after five seasons at Fratton Park." ]},
-  { name: "Fitzroy Simpson", pos: "MF", clues: [
-    "Midfielder signed from Manchester City in 1995.",
-    "Played in all three of Jamaica’s group games at the 1998 World Cup.",
-    "Left in 1999 for Heart of Midlothian in Scotland." ]},
-  { name: "Deon Burton", pos: "FW", clues: [
-    "Striker who came through at Portsmouth, making his debut in 1993–94.",
-    "Named Jamaican Sportsman of the Year for the qualifying goals that took Jamaica to the 1998 World Cup.",
-    "Sold to Derby County for £1m in 1997 by former Pompey boss Jim Smith." ]},
-  { name: "Lee Bradbury", pos: "FW", clues: [
-    "Striker who served four and a half years in the army, including in Northern Ireland.",
-    "Had two spells at Fratton Park: 1995–97 and 1999–2004.",
-    "Moved to Manchester City for a club-record £3m in 1997." ]},
-  { name: "Steve Claridge", pos: "FW", clues: [
-    "Well-travelled striker who joined in 1998.",
-    "Scored the winner for Leicester in the 1996 play-off final.",
-    "Became Portsmouth’s player-manager in 2000, in a career spanning more than 30 clubs." ]},
-  { name: "John Aloisi", pos: "FW", clues: [
-    "Striker who arrived in 1997 from Italian club Cremonese.",
-    "Scored 26 goals in 60 games before moving to Coventry City.",
-    "Australian. His penalty against Uruguay in 2005 sent Australia to the World Cup." ]},
-  { name: "Mark Chamberlain", pos: "MF", clues: [
-    "Pacey winger at the club from 1988 to 1994.",
-    "Won 8 England caps in the early 1980s and scored on his debut against Luxembourg.",
-    "Father of England midfielder Alex Oxlade-Chamberlain." ]},
-  { name: "Mathias Svensson", pos: "FW", clues: [
-    "Striker signed from Swedish club Elfsborg in 1996.",
+    "Sold to Tottenham for £1.75m in 1992, and later nicknamed “Sicknote”." ]},
+  { name: "Alan McLoughlin", pos: "MF", years: [1992, 1999], clues: [
+    "Born in Manchester and a trainee at Manchester United, but never played for their first team.",
+    "Joined from Southampton in 1992 and made over 300 league appearances.",
+    "His goal against Northern Ireland in November 1993 sent the Republic of Ireland to the 1994 World Cup." ]},
+  { name: "Fitzroy Simpson", pos: "MF", years: [1995, 1999], clues: [
+    "Started his career at Swindon Town.",
+    "Signed from Manchester City in 1995.",
+    "Played in all three of Jamaica’s games at the 1998 World Cup, then left for Hearts." ]},
+  { name: "Mark Chamberlain", pos: "MF", years: [1988, 1994], clues: [
+    "Started at Port Vale, then played for Stoke and Sheffield Wednesday.",
+    "Won 8 England caps and scored on his debut against Luxembourg.",
+    "Winger whose son Alex Oxlade-Chamberlain also played for England." ]},
+  { name: "Martin Kuhl", pos: "MF", years: [1988, 1992], clues: [
+    "Born in Frimley, Surrey. Played for Birmingham and Sheffield United before arriving.",
+    "Scored 27 goals in 157 games from midfield.",
+    "Missed in the 1992 FA Cup semi-final shoot-out against Liverpool, then joined Derby." ]},
+  { name: "Warren Aspinall", pos: "MF", years: [1988, 1993], clues: [
+    "Born in Wigan.",
+    "Joined from Aston Villa in 1988 for a then club-record £315,000.",
+    "Attacking midfielder in the 1992 FA Cup run, loaned to Bournemouth and Swansea in 1993." ]},
+  { name: "Sammy Igoe", pos: "MF", years: [1994, 2000], clues: [
+    "Born in Staines.",
+    "Went on to play for Swindon, Millwall, Bristol Rovers and Bournemouth.",
+    "Midfielder at Fratton Park from 1994 until he joined Reading in 2000." ]},
+  { name: "Jimmy Carter", pos: "MF", years: [1995, 1998], clues: [
+    "Born in Hammersmith. Helped Millwall win their first ever promotion to the top flight, in 1988.",
+    "Played for Liverpool and Arsenal before arriving in 1995.",
+    "Winger who was, without anyone knowing at the time, the second British Asian to play in the Premier League." ]},
+  { name: "Darryl Powell", pos: "MF", years: [1989, 1995], clues: [
+    "Born in Lambeth, London, in 1971.",
+    "Central midfielder at Pompey from 1989 until he joined Derby in 1995.",
+    "Sent off against Argentina while playing for Jamaica at the 1998 World Cup." ]},
+  { name: "Craig Foster", pos: "MF", years: [1997, 1998], clues: [
+    "Played club football in Hong Kong in the early 1990s.",
+    "Spent only the 1997–98 season at Fratton Park, then moved to Crystal Palace.",
+    "Australian midfielder who captained his country and became a well-known TV football analyst there." ]},
+
+  // Forwards
+  { name: "Guy Whittingham", pos: "FW", years: [1989, 1993], clues: [
+    "Served in the British Army before turning professional.",
+    "Sold to Aston Villa in 1993, and came back to Fratton Park in 1999.",
+    "Scored 42 league goals in 1992–93. Nicknamed “Corporal Punishment”." ]},
+  { name: "Paul Hall", pos: "FW", years: [1993, 1998], clues: [
+    "Signed from Torquay United in 1993.",
+    "Played up front or on the right wing, for five seasons at Fratton Park.",
+    "Started all three of Jamaica’s games at the 1998 World Cup, then joined Coventry." ]},
+  { name: "Deon Burton", pos: "FW", years: [1993, 1997], clues: [
+    "Made his debut in 1993–94, playing just two games that season.",
+    "Sold to Derby County for £1m in 1997 by a former Pompey manager.",
+    "Jamaican Sportsman of the Year for the goals that took Jamaica to the 1998 World Cup." ]},
+  { name: "Lee Bradbury", pos: "FW", years: [1995, 1997], clues: [
+    "Served with the Princess of Wales’s Royal Regiment before turning professional.",
+    "Had two spells at the club: 1995–97 and 1999–2004.",
+    "Sold to Manchester City for a club-record £3m in 1997." ]},
+  { name: "Steve Claridge", pos: "FW", years: [1998, 2001], clues: [
+    "Played for more than 30 clubs in a career lasting over three decades.",
+    "Arrived in 1998, two years after scoring the play-off final winner for Leicester.",
+    "Became Portsmouth’s player-manager in 2000." ]},
+  { name: "John Aloisi", pos: "FW", years: [1997, 1998], clues: [
+    "Played in Belgium and Italy, for Standard Liège, Antwerp and Cremonese, before arriving.",
+    "Scored 26 goals in 60 games, then joined Coventry.",
+    "Australian whose penalty against Uruguay in 2005 took his country to the World Cup." ]},
+  { name: "Mathias Svensson", pos: "FW", years: [1996, 1998], clues: [
+    "Signed from Elfsborg in 1996.",
     "Scored 10 goals in 45 games before leaving in 1998.",
-    "Swedish. Went on to play for Crystal Palace, Charlton and Norwich." ]},
-  { name: "Gerry Creaney", pos: "FW", clues: [
-    "Scottish striker who joined from Celtic in 1994.",
-    "Scored 30 goals in just over 60 games for the club.",
-    "Left for Manchester City in 1995, in a deal that brought Paul Walsh to Fratton Park." ]},
+    "Swedish striker who later played for Crystal Palace, Charlton and Norwich." ]},
+  { name: "Gerry Creaney", pos: "FW", years: [1994, 1995], clues: [
+    "Came through the ranks at Celtic.",
+    "Scored 30 goals in just over 60 games.",
+    "Scottish striker who went to Manchester City in 1995 in the deal that brought Paul Walsh back to Fratton Park." ]},
+  { name: "Colin Clarke", pos: "FW", years: [1990, 1993], clues: [
+    "Later managed Puerto Rico’s national team.",
+    "A knee injury ended his playing career in 1993.",
+    "Northern Ireland striker who was once his country’s joint record scorer, with 13 goals." ]},
+  { name: "Paul Walsh", pos: "FW", years: [1992, 1996], clues: [
+    "PFA Young Player of the Year in 1984.",
+    "Won the league with Liverpool and the FA Cup with Tottenham before arriving in 1992.",
+    "Left for Manchester City in 1994, came back in 1995, and later became a Soccer Saturday pundit." ]},
+  { name: "John Durnin", pos: "FW", years: [1993, 1999], clues: [
+    "Born in Bootle. Oxford United fans called him “Johnny Lager”.",
+    "Signed from Oxford for £200,000 in 1993.",
+    "Lost his place after dislocating his elbow in a golf-cart accident in 1999." ]},
 ];
-const ROUNDS = 10;
+const ROUNDS = 12;
 const LABELS = ["One", "Two", "Three"];
 const POINTS = [3, 2, 1];
 
@@ -203,11 +276,13 @@ let state;
 
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+// Wrong answers: same position, and preferably at the club at the same time.
 function makeChoices(answer) {
-  const others = PLAYERS.filter(p => p.name !== answer.name);
-  const same = shuffle(others.filter(p => p.pos === answer.pos));
-  const rest = shuffle(others.filter(p => p.pos !== answer.pos));
-  const decoys = same.concat(rest).slice(0, 2);
+  const overlap = p => Math.min(p.years[1], answer.years[1]) - Math.max(p.years[0], answer.years[0]);
+  const pool = shuffle(PLAYERS.filter(p => p.name !== answer.name && p.pos === answer.pos))
+    .sort((a, b) => overlap(b) - overlap(a))
+    .slice(0, 4);
+  const decoys = shuffle(pool).slice(0, 2);
   return shuffle([answer, ...decoys]).map(p => p.name);
 }
 
