@@ -128,7 +128,7 @@ button:focus-visible { outline: 3px solid var(--trim); outline-offset: 2px; }
     <button class="next" id="again" type="button">Play again</button>
   </section>
 
-  <p class="howto">The first clue is the hardest. Guess with one clue for 3 points, two for 2, or all three for 1. Each game picks 12 of 31 players, and the wrong answers played in the same position at about the same time.</p>
+  <p class="howto">The first clue is the hardest. Guess with one clue for 3 points, two for 2, or all three for 1. Each game picks 12 of 32 players, and the wrong answers played in the same position at about the same time.</p>
 </div>
 
 <script>
@@ -178,6 +178,12 @@ const PLAYERS = [
     "Won 20 caps for his country, scoring twice.",
     "Joined from Newcastle United in 1993.",
     "Danish defender and midfielder who went home to AaB in 1995." ]},
+
+  // Fictional: a joke entry, not a real player. Kept unmarked in the game on purpose.
+  { name: "David Chillcruft", pos: "DF", years: [1990, 1999], clues: [
+    "Made his only Portsmouth appearance against Grimsby Town.",
+    "Broke his leg three minutes into that debut, and never played again.",
+    "A 97-year-old defender." ]},
 
   // Midfielders
   { name: "Darren Anderton", pos: "MF", years: [1990, 1992], clues: [
