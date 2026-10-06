@@ -433,8 +433,35 @@ const Music = (() => {
       nextTime += len * beat; step++;
     }
   }
+  // iPhones treat Web Audio like a ringtone, so it's muted when the Ring/Silent switch is
+  // on. Declaring the page as a media player, and keeping a silent <audio> element playing
+  // (for iOS versions without navigator.audioSession), lets the music through.
+  let silentEl = null;
+  function silentWav() {
+    const n = 4000, buf = new Uint8Array(44 + n), v = new DataView(buf.buffer);
+    const w = (o, s) => { for (let i = 0; i < s.length; i++) buf[o + i] = s.charCodeAt(i); };
+    w(0, "RIFF"); v.setUint32(4, 36 + n, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true);
+    v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, "data"); v.setUint32(40, n, true); buf.fill(128, 44);
+    let bin = ""; for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+    return "data:audio/wav;base64," + btoa(bin);
+  }
+  function unlock() {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
+    try {
+      if (!silentEl) { silentEl = new Audio(silentWav()); silentEl.loop = true; silentEl.setAttribute("playsinline", ""); }
+      const p = silentEl.play(); if (p && p.catch) p.catch(() => {});
+    } catch (e) {}
+    // A one-sample sound played inside the tap wakes up audio on older iOS versions.
+    const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource();
+    s.buffer = b; s.connect(ctx.destination); s.start(0);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && on && ctx && ctx.state !== "running") ctx.resume();
+  });
+
   function start() {
-    ensure(); ctx.resume(); on = true;
+    ensure(); unlock(); ctx.resume(); on = true;
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setTargetAtTime(0.8, ctx.currentTime, 0.4);
     nextTime = ctx.currentTime + 0.1; step = 0;
@@ -443,6 +470,7 @@ const Music = (() => {
   function stop() {
     on = false; clearInterval(timer);
     if (ctx) master.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+    if (silentEl) silentEl.pause();
   }
   function chime(ok) {
     if (!on || !ctx) return;
